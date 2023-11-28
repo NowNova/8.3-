@@ -1,0 +1,160 @@
+#include <iostream>
+#include <string>
+#include <string.h>
+#include <fstream>
+#include <stdio.h>
+
+namespace saa {
+    char tolower(char c) {
+        if ('а' <= c && c <= 'я') {
+            return c + 32;
+        }
+        else if (c == 'ё') {
+            return c + 16;
+        }
+        if ('A' <= c && c <= 'Z') {
+            return c + 32;
+        }
+        return c;
+    }
+    void tolower(char* str) {
+        for (int i = 0; i < strlen(str); i++) {
+            str[i] = tolower(str[i]);
+        }
+    }
+    void countofletters(char* str, int* g) {
+        for (int i = 0; i < strlen(str); i++) {
+            g[int(str[i]) - int('a')]++;
+        }
+    }
+    void sorted(char* letters, int* g, int size) {
+        for (int i = 0; i < size; i++) {
+            if (g[i] != 0) {
+                for (int j = 0; j < size - 1; j++) {
+                    if ((g[j] != 0) && (g[i] > g[j])) {
+                        int tmp = g[i];
+                        g[i] = g[j];
+                        g[j] = tmp;
+                        char tmpp = letters[i];
+                        letters[i] = letters[j];
+                        letters[j] = tmpp;
+                    }
+                    else { continue; }
+                }
+            }
+            else { continue; }
+        }
+    }
+    //В скобочках записываю подхлдящие буквы
+    char* matchingletters(char* str, char* letters, char* mletter) {
+        char mmletter[10] = { 0 };
+        mletter[0] = '(';
+        int size = 1;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < strlen(str); j++) {
+                if (letters[i] == str[j]) {
+                    mletter[size] = letters[i];
+                    size++;
+                    break;
+                }
+            }
+        }
+        for (int i = size; i <= strlen(mletter) + 1; i++) {
+            mletter[i] = mletter[i + 1];
+        }
+        mletter[size] = ')';
+        for (int i = size; i <= strlen(mletter) + 1; i++) {
+            mletter[i] = mletter[i + 1];
+        }
+        mletter[size] = ')';
+        if (size >= 5) {
+            return mletter;
+        }
+        else { return 0; }
+    }
+
+}
+
+int main()
+{
+    //Создаю массив букв
+    int r = int('z') - int('a') + 1;
+    char matchingletters[10] = { 0 };
+    int g[26] = { 0 };
+    char letters[26] = { 0 };
+    for (int i = 0; i < 26; i++) {
+        letters[i] = char(int('a') + i);
+    }
+    //Ввод текста
+    setlocale(LC_ALL, "RUSSIAN");
+    char text[100000];
+    std::ifstream in("File2.txt");
+    if (!in.is_open()) {
+        std::cout << "File error" << std::endl;
+        return -1;
+    }
+    in.getline(text, 1000);
+    char words[5000][50];
+    char word[50] = { 0 };
+    strcat_s(text, ".");
+    int n = 0, i = 0, size = 0;
+    while (i < strlen(text)) {
+        if (isalpha(text[i])) {
+            word[n] = text[i];
+            n++;
+        }
+        else {
+            if (n != 0) {
+                word[n] = '\0';
+                strcpy_s(words[size], word);
+                //считываю какие буквы в слове
+                saa::countofletters(words[size], g);
+                size++;
+                n = 0;
+            }
+        }
+        i++;
+    }
+    saa::sorted(letters, g, r);
+    //Сохраняю первые восемь самых частых букв
+    int truesize = 0;
+    char mletter[8] = { 0 };
+    for (int i = 0; i < 26; i++) {
+        if (g[i] != 0 && truesize < 8) {
+            mletter[truesize] = letters[i];
+            truesize++;
+        }
+    }
+    for (int i = 0; i < size; i++) {
+        if (saa::matchingletters(words[i], mletter, matchingletters) != 0) {
+            std::cout << words[i] << " " << saa::matchingletters(words[i], mletter, matchingletters) << " ";
+        }
+        else if (saa::matchingletters(words[i], mletter, matchingletters) == 0) {
+            std::cout << words[i] << " ";
+        }
+    }
+    //Вывод
+    n = 0, i = 0, size = 0;
+    int d = 0;
+    std::ofstream fout("output.txt");
+    while (i < strlen(text)) {
+        if (isalpha(text[i])) {
+            word[n] = text[i];
+            n++;
+        }
+        else if (n != 0) {
+            word[n] = '\0';
+            strcpy_s(words[size], word);
+            if (saa::matchingletters(words[i], mletter, matchingletters)) {
+                std::cout << words[size];
+                saa::tolower(words[size]);
+                std::cout << saa::matchingletters(words[size], mletter, matchingletters);
+            }
+            size++;
+            n = 0;
+        }
+        i++;
+    }
+}
+
+
